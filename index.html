@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gauge test</title>
+  <style>
+    :root { --bg:#0b0d10; --panel:#0a0c0f; --text:#ffffff; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: #1a1d22;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      color: var(--text);
+    }
+    .card {
+      width: 820px;
+      max-width: 92vw;
+      background: radial-gradient(1200px 600px at 50% 0%, rgba(60,80,120,.22), transparent 55%),
+                  linear-gradient(#07090c, #06080b);
+      border-radius: 0; /* comme ton visuel: angle net */
+      padding: 64px 56px 48px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 25px 70px rgba(0,0,0,.55);
+    }
+    .title {
+      font-size: 72px;
+      line-height: .92;
+      font-weight: 500;
+      letter-spacing: -1px;
+      margin: 0 0 40px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      align-items: end;
+    }
+    .value {
+      font-size: 168px;
+      line-height: .9;
+      font-weight: 500;
+      letter-spacing: -4px;
+      margin: 0;
+    }
+    .value span { opacity: .95; }
+    .controls {
+      margin-top: 28px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    input[type="range"] { width: 320px; }
+    input[type="number"]{
+      width: 90px;
+      background: #0f1218;
+      border: 1px solid rgba(255,255,255,.12);
+      color: white;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    .gauge-wrap{
+      position:absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .gauge{
+      position:absolute;
+      right: 80px;
+      top: 120px;
+      width: 560px;
+      height: 560px;
+      filter: drop-shadow(0 18px 24px rgba(0,0,0,.55));
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="gauge-wrap">
+      <!-- SVG Gauge -->
+      <svg class="gauge" viewBox="0 0 300 300">
+        <defs>
+          <radialGradient id="grad" cx="35%" cy="30%" r="80%">
+            <stop offset="0%" stop-color="#5f86ff" stop-opacity="1"/>
+            <stop offset="55%" stop-color="#3b5bd4" stop-opacity="1"/>
+            <stop offset="100%" stop-color="#1a2a55" stop-opacity="1"/>
+          </radialGradient>
+          <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.25" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- Arc de fond (optionnel) -->
+        <path id="track" d="" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="86" stroke-linecap="butt"/>
+        <!-- Arc dynamique -->
+        <path id="arc" d="" fill="none" stroke="url(#grad)" stroke-width="86" stroke-linecap="butt" filter="url(#soft)"/>
+      </svg>
+    </div>
+
+    <h1 class="title">Security<br/>rating</h1>
+
+    <div class="row">
+      <p class="value"><span id="pctText">80</span>%</p>
+
+      <div>
+        <div class="controls" style="pointer-events:auto">
+          <input id="range" type="range" min="0" max="100" value="80" />
+          <input id="num" type="number" min="0" max="100" value="80" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Paramètres de la jauge
+    const startAngle = -60;     // départ en degrés
+    const sweepAngle = 300;     // amplitude max (comme "gros trou" sur ton visuel)
+    const cx = 150, cy = 150;
+    const radius = 92;          // rayon "médian" (lié au stroke-width)
+    const track = document.getElementById('track');
+    const arc = document.getElementById('arc');
+    const pctText = document.getElementById('pctText');
+    const range = document.getElementById('range');
+    const num = document.getElementById('num');
+
+    function polarToCartesian(cx, cy, r, angleDeg) {
+      const a = (angleDeg - 90) * Math.PI / 180;
+      return { x: cx + (r * Math.cos(a)), y: cy + (r * Math.sin(a)) };
+    }
+
+    function describeArc(cx, cy, r, startDeg, endDeg) {
+      const start = polarToCartesian(cx, cy, r, endDeg);
+      const end = polarToCartesian(cx, cy, r, startDeg);
+      const largeArcFlag = (endDeg - startDeg) <= 180 ? "0" : "1";
+      return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
+    }
+
+    function setGauge(value) {
+      const v = Math.max(0, Math.min(100, Number(value) || 0));
+      pctText.textContent = v;
+
+      // track fixe
+      track.setAttribute('d', describeArc(cx, cy, radius, startAngle, startAngle + sweepAngle));
+
+      // arc dynamique
+      const end = startAngle + (sweepAngle * (v / 100));
+      arc.setAttribute('d', describeArc(cx, cy, radius, startAngle, end));
+    }
+
+    function syncFrom(val){
+      range.value = val;
+      num.value = val;
+      setGauge(val);
+    }
+
+    range.addEventListener('input', (e) => syncFrom(e.target.value));
+    num.addEventListener('input', (e) => syncFrom(e.target.value));
+
+    setGauge(80);
+  </script>
+</body>
+</html>
