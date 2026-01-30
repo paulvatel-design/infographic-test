@@ -23,7 +23,6 @@
       gap: 18px;
     }
 
-    /* EXPORTABLE */
     .card{
       position: relative;
       width: 721px;
@@ -32,7 +31,6 @@
       overflow: hidden;
     }
 
-    /* Title */
     .title{
       position:absolute;
       top: 48px;
@@ -49,7 +47,6 @@
       z-index: 2; /* sous la jauge */
     }
 
-    /* % value (SOUS la jauge) */
     .value{
       position:absolute;
       left: 48px;
@@ -69,10 +66,9 @@
       letter-spacing: -6px;
       margin: 0;
 
-      z-index: 1; /* IMPORTANT: sous la jauge */
+      z-index: 1; /* sous la jauge */
     }
 
-    /* Jauge centrée */
     .gauge{
       position:absolute;
       left: 50%;
@@ -83,19 +79,18 @@
       height: 522px;
 
       pointer-events:none;
-      z-index: 3; /* au-dessus */
+      z-index: 3;
       filter: drop-shadow(0 18px 28px rgba(0,0,0,.55));
     }
 
-    /* Animation douce */
-    #sector, #fullCircle{
-      transition: opacity 160ms ease;
-    }
     #sector{
       transition: d 220ms ease, opacity 160ms ease;
     }
+    #fullCircle{
+      transition: opacity 160ms ease;
+    }
 
-    /* CONTROLS */
+    /* Controls */
     .ui{
       width: min(721px, 100%);
       display:flex;
@@ -168,15 +163,11 @@
 <body>
 
   <div class="card" id="exportArea">
-
     <h1 class="title" id="titleText">Security<br>rating</h1>
-
     <p class="value"><span id="pctText">80%</span></p>
 
-    <!-- Gauge centered -->
     <svg class="gauge" viewBox="0 0 300 300" aria-label="Gauge">
       <defs>
-        <!-- Radial gradient: center transparent -> edge blue -->
         <radialGradient id="fillRadial" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="rgba(56, 113, 225, 0)" />
           <stop offset="100%" stop-color="#3871E1" />
@@ -187,15 +178,15 @@
         </filter>
       </defs>
 
-      <!-- FULL circle (shown only when v=100) -->
-      <circle id="fullCircle" cx="150" cy="150" r="140" fill="url(#fillRadial)" filter="url(#soften)" opacity="0"></circle>
+      <!-- cercle plein (uniquement à 100) -->
+      <circle id="fullCircle" cx="150" cy="150" r="140"
+              fill="url(#fillRadial)" filter="url(#soften)" opacity="0"></circle>
 
-      <!-- Sector (0..99) -->
+      <!-- secteur (0..99) -->
       <path id="sector" d="" fill="url(#fillRadial)" filter="url(#soften)"></path>
     </svg>
   </div>
 
-  <!-- Controls -->
   <div class="ui">
     <div class="panel">
       <div class="row">
@@ -238,10 +229,10 @@
     const cx = 150, cy = 150;
     const radius = 140;
 
-    // IMPORTANT: ici on garde le style "pacman" pour 0..99,
-    // mais à 100 on montre un cercle plein.
-    const startAngle = -60;
-    const sweepAngle = 300;
+    // Départ “en haut” pour un rendu plus naturel (12h)
+    // 0% = rien, 25% = quart, 50% = demi, 75% = 3/4, 99% quasi cercle
+    const startAngle = -90;      // 12h
+    const fullSweep = 360;       // logique: 0..360
 
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
@@ -256,7 +247,6 @@
       const delta = endDeg - startDeg;
       const largeArc = delta <= 180 ? 0 : 1;
 
-      // Sweep flag = 1 (sens horaire) pour rester stable visuellement
       return [
         `M ${cx} ${cy}`,
         `L ${start.x} ${start.y}`,
@@ -269,19 +259,25 @@
       const v = clamp(Number(value) || 0, 0, 100);
       pctText.textContent = v + "%";
 
-      if (v >= 100){
-        // Show full circle, hide sector
-        fullCircle.setAttribute('opacity', '1');
+      // 0% -> rien
+      if (v <= 0){
+        fullCircle.setAttribute('opacity', '0');
         sector.setAttribute('opacity', '0');
-        // sector d not important here
         return;
       }
 
-      // Show sector, hide full circle
+      // 100% -> cercle plein
+      if (v >= 100){
+        fullCircle.setAttribute('opacity', '1');
+        sector.setAttribute('opacity', '0');
+        return;
+      }
+
+      // Entre 1 et 99 -> secteur proportionnel
       fullCircle.setAttribute('opacity', '0');
       sector.setAttribute('opacity', '1');
 
-      const end = startAngle + (sweepAngle * (v / 100));
+      const end = startAngle + (fullSweep * (v / 100));
       sector.setAttribute('d', describeSector(cx, cy, radius, startAngle, end));
     }
 
@@ -341,6 +337,7 @@
   </script>
 </body>
 </html>
+
 
 
 
