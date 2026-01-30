@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Infographic Editor</title>
 
-  <!-- Roboto Mono (pour le %). Funnel Display: si tu l’as en fichier, on l’ajoutera ensuite. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
@@ -24,9 +23,7 @@
       gap: 18px;
     }
 
-    /* ================
-       EXPORTABLE FRAME
-       ================ */
+    /* EXPORTABLE */
     .card{
       position: relative;
       width: 721px;
@@ -35,7 +32,7 @@
       overflow: hidden;
     }
 
-    /* Title (au-dessus, mais sous la jauge car la jauge doit passer devant) */
+    /* Title */
     .title{
       position:absolute;
       top: 48px;
@@ -44,7 +41,6 @@
       color: #FFF;
       font-family: "Funnel Display", system-ui, sans-serif;
       font-size: 80px;
-      font-style: normal;
       font-weight: 400;
       line-height: 81.5px;
       margin: 0;
@@ -53,7 +49,7 @@
       z-index: 2; /* sous la jauge */
     }
 
-    /* Value (% sous la jauge) */
+    /* % value (SOUS la jauge) */
     .value{
       position:absolute;
       left: 48px;
@@ -68,7 +64,6 @@
       color:#FFF;
       font-family: "Roboto Mono", monospace;
       font-size: 240px;
-      font-style: normal;
       font-weight: 400;
       line-height: 121.5px;
       letter-spacing: -6px;
@@ -77,11 +72,12 @@
       z-index: 1; /* IMPORTANT: sous la jauge */
     }
 
-    /* Jauge = calque au-dessus (doit recouvrir titre et valeur comme dans ton visuel) */
+    /* Jauge centrée */
     .gauge{
       position:absolute;
-      right: 32px;
-      top: 150px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
 
       width: 522px;
       height: 522px;
@@ -92,13 +88,14 @@
     }
 
     /* Animation douce */
+    #sector, #fullCircle{
+      transition: opacity 160ms ease;
+    }
     #sector{
-      transition: d 220ms ease;
+      transition: d 220ms ease, opacity 160ms ease;
     }
 
-    /* =================
-       CONTROLS (NOT EXPORT)
-       ================= */
+    /* CONTROLS */
     .ui{
       width: min(721px, 100%);
       display:flex;
@@ -170,41 +167,35 @@
 
 <body>
 
-  <!-- VISUEL EXPORTABLE -->
   <div class="card" id="exportArea">
 
-    <!-- Title -->
     <h1 class="title" id="titleText">Security<br>rating</h1>
 
-    <!-- % value (SOUS la jauge) -->
     <p class="value"><span id="pctText">80%</span></p>
 
-    <!-- Jauge pleine (sector rempli) -->
+    <!-- Gauge centered -->
     <svg class="gauge" viewBox="0 0 300 300" aria-label="Gauge">
       <defs>
-        <!-- Dégradé radial: centre transparent -> bord bleu -->
+        <!-- Radial gradient: center transparent -> edge blue -->
         <radialGradient id="fillRadial" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="rgba(56, 113, 225, 0)" />
           <stop offset="100%" stop-color="#3871E1" />
         </radialGradient>
 
-        <!-- Un léger "soften" (optionnel) -->
         <filter id="soften" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="0.15" />
         </filter>
       </defs>
 
-      <!-- Optionnel: un track très discret si tu veux (désactivé par défaut)
-      <path id="track" d="" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2"/>
-      -->
+      <!-- FULL circle (shown only when v=100) -->
+      <circle id="fullCircle" cx="150" cy="150" r="140" fill="url(#fillRadial)" filter="url(#soften)" opacity="0"></circle>
 
-      <!-- Sector dynamique rempli -->
+      <!-- Sector (0..99) -->
       <path id="sector" d="" fill="url(#fillRadial)" filter="url(#soften)"></path>
     </svg>
-
   </div>
 
-  <!-- CONTROLS (non exportés) -->
+  <!-- Controls -->
   <div class="ui">
     <div class="panel">
       <div class="row">
@@ -224,18 +215,17 @@
         <button id="btnJpg">JPG</button>
       </div>
 
-      <div class="hint">Astuce : retour à la ligne avec \n (ex: "Security\nrating")</div>
+      <div class="hint">Astuce : retour à la ligne avec \n</div>
       <div class="status" id="status"></div>
     </div>
   </div>
 
-  <!-- html2canvas (gratuit) -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <script>
-    // DOM
     const exportArea = document.getElementById('exportArea');
     const sector = document.getElementById('sector');
+    const fullCircle = document.getElementById('fullCircle');
     const pctText = document.getElementById('pctText');
     const range = document.getElementById('range');
     const num = document.getElementById('num');
@@ -245,12 +235,13 @@
     const btnJpg = document.getElementById('btnJpg');
     const statusEl = document.getElementById('status');
 
-    // Paramètres de jauge
-    // -> startAngle + sweepAngle reproduit le “trou” du Pacman
     const cx = 150, cy = 150;
-    const radius = 140;       // plein (plus grand pour remplir un max le container)
-    const startAngle = -60;   // départ
-    const sweepAngle = 300;   // amplitude max (trou de 60°)
+    const radius = 140;
+
+    // IMPORTANT: ici on garde le style "pacman" pour 0..99,
+    // mais à 100 on montre un cercle plein.
+    const startAngle = -60;
+    const sweepAngle = 300;
 
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
@@ -259,13 +250,13 @@
       return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
     }
 
-    // Sector plein: centre -> point start -> arc -> retour centre
     function describeSector(cx, cy, r, startDeg, endDeg) {
       const start = polarToCartesian(cx, cy, r, startDeg);
       const end = polarToCartesian(cx, cy, r, endDeg);
       const delta = endDeg - startDeg;
       const largeArc = delta <= 180 ? 0 : 1;
 
+      // Sweep flag = 1 (sens horaire) pour rester stable visuellement
       return [
         `M ${cx} ${cy}`,
         `L ${start.x} ${start.y}`,
@@ -277,6 +268,18 @@
     function setGauge(value){
       const v = clamp(Number(value) || 0, 0, 100);
       pctText.textContent = v + "%";
+
+      if (v >= 100){
+        // Show full circle, hide sector
+        fullCircle.setAttribute('opacity', '1');
+        sector.setAttribute('opacity', '0');
+        // sector d not important here
+        return;
+      }
+
+      // Show sector, hide full circle
+      fullCircle.setAttribute('opacity', '0');
+      sector.setAttribute('opacity', '1');
 
       const end = startAngle + (sweepAngle * (v / 100));
       sector.setAttribute('d', describeSector(cx, cy, radius, startAngle, end));
@@ -326,7 +329,6 @@
       }
     }
 
-    // Events
     range.addEventListener('input', e => syncValue(e.target.value));
     num.addEventListener('input', e => syncValue(e.target.value));
     titleInput.addEventListener('input', syncTitle);
@@ -334,11 +336,11 @@
     btnPng.addEventListener('click', () => exportImage("png"));
     btnJpg.addEventListener('click', () => exportImage("jpeg"));
 
-    // Init
     syncValue(80);
     syncTitle();
   </script>
 </body>
 </html>
+
 
 
