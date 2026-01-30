@@ -3,317 +3,221 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Infographic Gauge Test</title>
+  <title>Infographic Editor</title>
+
+  <!-- Fonts (fallback si Funnel Display non chargée) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+
   <style>
-    :root{
-      --page:#1b1f26;
-      --panelTop:#0a0c10;
-      --panelBottom:#07090c;
-      --text:#fff;
-      --muted:rgba(255,255,255,.65);
-      --track:rgba(255,255,255,.08);
-      --inputBg:#0f1218;
-      --inputBorder:rgba(255,255,255,.14);
-      --btnBg:#10131a;
-      --btnBorder:rgba(255,255,255,.16);
-    }
-    *{ box-sizing:border-box; }
+    * { box-sizing: border-box; }
+
     body{
       margin:0;
       min-height:100vh;
       display:grid;
       place-items:center;
-      background:var(--page);
-      color:var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:#1b1b1b;
+      color:#fff;
+      font-family: system-ui, sans-serif;
     }
 
-    /* Zone exportable (le visuel) */
+    /* ======================
+       EXPORTABLE BACKGROUND
+       ====================== */
     .card{
-      width: 980px;
-      max-width: 94vw;
-      aspect-ratio: 16 / 9;
       position: relative;
-      overflow:hidden;
-      background:
-        radial-gradient(1200px 700px at 50% 0%, rgba(80,110,170,.25), transparent 55%),
-        linear-gradient(var(--panelTop), var(--panelBottom));
-      box-shadow: 0 25px 70px rgba(0,0,0,.55);
-      padding: 64px 60px 54px;
+      width: 721px;
+      height: 721px;
+      background: #0F0F0F;
+      overflow: hidden;
     }
 
+    /* ======================
+       TITLE
+       ====================== */
     .title{
-      font-size: 86px;
-      line-height: .92;
-      font-weight: 600;
-      letter-spacing: -1.5px;
-      margin:0;
+      position: absolute;
+      top: 48px;
+      left: 48px;
+
+      color: #FFF;
+      font-family: "Funnel Display", system-ui, sans-serif;
+      font-size: 80px;
+      font-weight: 400;
+      line-height: 81.5px;
+      margin: 0;
+      white-space: pre-line;
     }
 
+    /* ======================
+       PERCENTAGE VALUE
+       ====================== */
     .value{
-      position:absolute;
-      left:60px;
-      bottom:58px;
-      font-size: 190px;
-      line-height: .9;
-      font-weight: 600;
-      letter-spacing: -6px;
-      margin:0;
-      z-index:2;
-      text-shadow: 0 18px 45px rgba(0,0,0,.6);
-    }
-    .value .muted{ opacity:.98; }
-    .value .pct{ opacity:.95; }
+      position: absolute;
+      left: 48px;
+      bottom: 48px;
 
-    /* UI controls (non exportés) */
+      display: flex;
+      width: 552px;
+      height: 171px;
+      flex-direction: column;
+      justify-content: center;
+
+      color: #FFF;
+      font-family: "Roboto Mono", monospace;
+      font-size: 240px;
+      font-weight: 400;
+      line-height: 121.5px;
+      letter-spacing: -6px;
+    }
+
+    .value span{
+      display: inline-block;
+    }
+
+    /* ======================
+       GAUGE
+       ====================== */
+    .gauge{
+      position: absolute;
+      right: 32px;
+      top: 160px;
+      width: 522px;
+      height: 522px;
+      pointer-events: none;
+    }
+
+    /* ======================
+       CONTROLS (NON EXPORTÉS)
+       ====================== */
     .ui{
-      margin-top: 18px;
-      width: min(980px, 94vw);
-      display:flex;
-      justify-content:flex-end;
-      gap: 14px;
-      align-items:flex-start;
-      z-index:5;
-    }
-    .panel{
-      display:flex;
-      flex-direction:column;
+      margin-top: 24px;
+      display: flex;
       gap: 12px;
-      background: rgba(10,12,16,.55);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 16px;
-      padding: 14px;
-      backdrop-filter: blur(8px);
-      min-width: 520px;
-    }
-    .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:flex-end;
+      align-items: center;
       flex-wrap: wrap;
     }
-    .label{
-      font-size: 12px;
-      color: var(--muted);
-      letter-spacing:.3px;
-      width: 46px;
-      text-align:right;
-    }
-    input[type="range"]{
-      width: 280px;
-    }
-    input[type="number"], input[type="text"]{
-      background: var(--inputBg);
-      border: 1px solid var(--inputBorder);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      outline: none;
-    }
-    input[type="number"]{ width: 86px; text-align:right; }
-    input[type="text"]{ width: 380px; }
 
-    .hint{
-      font-size: 12px;
-      color: rgba(255,255,255,.5);
-      text-align:right;
-      margin-top: 2px;
+    .ui input[type="range"]{ width: 200px; }
+    .ui input[type="number"],
+    .ui input[type="text"]{
+      background:#111;
+      border:1px solid rgba(255,255,255,.2);
+      color:#fff;
+      padding:8px 10px;
+      border-radius:8px;
     }
 
-    button{
-      background: var(--btnBg);
-      border: 1px solid var(--btnBorder);
-      color: white;
-      padding: 10px 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    button:active{ transform: translateY(1px); }
-    button[disabled]{ opacity: .55; cursor: not-allowed; }
-
-    .status{
-      font-size: 12px;
-      color: rgba(255,255,255,.55);
-      text-align:right;
-      min-height: 16px;
-    }
-
-    /* Gauge */
-    .gauge{
-      position:absolute;
-      right: 110px;
-      top: 110px;
-      width: 620px;
-      height: 620px;
-      z-index:1;
-      filter: drop-shadow(0 18px 28px rgba(0,0,0,.55));
-      pointer-events:none;
-    }
-
-    /* Animation douce de l'arc */
-    #arc{
-      transition: d 220ms ease;
+    .ui button{
+      background:#111;
+      border:1px solid rgba(255,255,255,.25);
+      color:#fff;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
     }
   </style>
 </head>
 
 <body>
+
   <!-- VISUEL EXPORTABLE -->
   <div class="card" id="exportArea">
-    <svg class="gauge" viewBox="0 0 300 300" aria-label="Gauge">
+
+    <!-- GAUGE -->
+    <svg class="gauge" viewBox="0 0 300 300">
       <defs>
-        <radialGradient id="grad" cx="35%" cy="30%" r="85%">
-          <stop offset="0%" stop-color="#6b92ff" stop-opacity="1"/>
-          <stop offset="55%" stop-color="#4364df" stop-opacity="1"/>
-          <stop offset="100%" stop-color="#16254e" stop-opacity="1"/>
+        <radialGradient id="arcGradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(56,113,225,0)" />
+          <stop offset="100%" stop-color="#3871E1" />
         </radialGradient>
       </defs>
 
-      <path id="track" d="" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="90" stroke-linecap="butt"></path>
-      <path id="arc" d="" fill="none" stroke="url(#grad)" stroke-width="90" stroke-linecap="butt"></path>
+      <path id="track" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="80" />
+      <path id="arc" fill="none" stroke="url(#arcGradient)" stroke-width="80" />
     </svg>
 
-    <h1 class="title" id="titleText">Security<br/>rating</h1>
-    <p class="value"><span class="pct" id="pctText">80</span><span class="muted">%</span></p>
-  </div>
+    <!-- TITLE -->
+    <h1 class="title" id="titleText">Security<br>rating</h1>
 
-  <!-- CONTROLES (non exportés) -->
-  <div class="ui">
-    <div class="panel">
-      <div class="row">
-        <div class="label">%</div>
-        <input id="range" type="range" min="0" max="100" value="80" />
-        <input id="num" type="number" min="0" max="100" value="80" />
-      </div>
-
-      <div class="row">
-        <div class="label">Titre</div>
-        <input id="titleInput" type="text" value="Security\\nrating" />
-      </div>
-
-      <div class="row">
-        <div class="label">Export</div>
-        <button id="btnPng">PNG</button>
-        <button id="btnJpg">JPG</button>
-      </div>
-
-      <div class="hint">Astuce : retour à la ligne avec \\n (ex: "Security\\nrating")</div>
-      <div class="status" id="status"></div>
+    <!-- VALUE -->
+    <div class="value">
+      <span id="pctText">80%</span>
     </div>
   </div>
 
-  <!-- html2canvas (gratuit) -->
+  <!-- CONTROLS -->
+  <div class="ui">
+    <input id="range" type="range" min="0" max="100" value="80">
+    <input id="num" type="number" min="0" max="100" value="80">
+    <input id="titleInput" type="text" value="Security\nrating">
+    <button id="exportPng">Export PNG</button>
+  </div>
+
+  <!-- html2canvas -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <script>
-    // --- Références DOM
-    const exportArea = document.getElementById('exportArea');
     const track = document.getElementById('track');
-    const arc   = document.getElementById('arc');
+    const arc = document.getElementById('arc');
     const pctText = document.getElementById('pctText');
     const range = document.getElementById('range');
     const num = document.getElementById('num');
     const titleText = document.getElementById('titleText');
     const titleInput = document.getElementById('titleInput');
-    const btnPng = document.getElementById('btnPng');
-    const btnJpg = document.getElementById('btnJpg');
-    const statusEl = document.getElementById('status');
+    const exportBtn = document.getElementById('exportPng');
+    const exportArea = document.getElementById('exportArea');
 
-    // --- Paramètres gauge (à ajuster ensuite pour matcher Figma)
     const cx = 150, cy = 150;
-    const radius = 92;
+    const radius = 95;
     const startAngle = -60;
     const sweepAngle = 300;
 
-    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
-
-    function polarToCartesian(cx, cy, r, angleDeg) {
-      const a = (angleDeg - 90) * Math.PI / 180;
-      return { x: cx + (r * Math.cos(a)), y: cy + (r * Math.sin(a)) };
+    function polarToCartesian(cx, cy, r, angle) {
+      const rad = (angle - 90) * Math.PI / 180;
+      return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
     }
 
-    function describeArc(cx, cy, r, startDeg, endDeg) {
-      const start = polarToCartesian(cx, cy, r, endDeg);
-      const end   = polarToCartesian(cx, cy, r, startDeg);
-      const delta = endDeg - startDeg;
-      const largeArcFlag = delta <= 180 ? "0" : "1";
-      return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
+    function describeArc(start, end) {
+      const s = polarToCartesian(cx, cy, radius, end);
+      const e = polarToCartesian(cx, cy, radius, start);
+      const large = end - start <= 180 ? 0 : 1;
+      return `M ${s.x} ${s.y} A ${radius} ${radius} 0 ${large} 0 ${e.x} ${e.y}`;
     }
 
-    function setGauge(value){
-      const v = clamp(Number(value) || 0, 0, 100);
-      pctText.textContent = v;
+    function setGauge(v){
+      v = Math.max(0, Math.min(100, v));
+      pctText.textContent = v + "%";
 
-      track.setAttribute('d', describeArc(cx, cy, radius, startAngle, startAngle + sweepAngle));
-
-      const end = startAngle + (sweepAngle * (v / 100));
-      arc.setAttribute('d', describeArc(cx, cy, radius, startAngle, end));
+      track.setAttribute("d", describeArc(startAngle, startAngle + sweepAngle));
+      arc.setAttribute("d", describeArc(startAngle, startAngle + sweepAngle * v / 100));
     }
 
-    function syncValue(val){
-      const v = clamp(Number(val) || 0, 0, 100);
+    function sync(v){
       range.value = v;
       num.value = v;
       setGauge(v);
     }
 
-    function syncTitle(){
-      const raw = (titleInput.value || "").trim();
-      titleText.innerHTML = raw.replaceAll("\\n", "<br/>");
-    }
+    range.oninput = e => sync(e.target.value);
+    num.oninput = e => sync(e.target.value);
 
-    function setBusy(isBusy, msg=""){
-      btnPng.disabled = isBusy;
-      btnJpg.disabled = isBusy;
-      statusEl.textContent = msg;
-    }
+    titleInput.oninput = e => {
+      titleText.innerHTML = e.target.value.replaceAll("\\n","<br>");
+    };
 
-    async function exportImage(type){
-      // type: "png" | "jpeg"
-      try{
-        setBusy(true, "Export en cours…");
-        // Augmente la qualité : scale 2 (plus net)
-        const canvas = await html2canvas(exportArea, {
-          backgroundColor: null, // garde le fond du visuel
-          scale: 2,
-          useCORS: true
-        });
+    exportBtn.onclick = async () => {
+      const canvas = await html2canvas(exportArea, { scale: 2 });
+      const link = document.createElement("a");
+      link.download = "infographic.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    };
 
-        const mime = type === "jpeg" ? "image/jpeg" : "image/png";
-        const quality = type === "jpeg" ? 0.92 : 1.0;
-
-        const dataUrl = canvas.toDataURL(mime, quality);
-
-        const a = document.createElement("a");
-        const pct = clamp(Number(num.value) || 0, 0, 100);
-        const fileName = `infographic-${pct}.${type === "jpeg" ? "jpg" : "png"}`;
-        a.href = dataUrl;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        setBusy(false, `Export terminé : ${fileName}`);
-      }catch(err){
-        console.error(err);
-        setBusy(false, "Erreur export (voir console).");
-      }
-    }
-
-    // Events
-    range.addEventListener('input', (e) => syncValue(e.target.value));
-    num.addEventListener('input', (e) => syncValue(e.target.value));
-    titleInput.addEventListener('input', () => syncTitle());
-
-    btnPng.addEventListener('click', () => exportImage("png"));
-    btnJpg.addEventListener('click', () => exportImage("jpeg"));
-
-    // init
-    syncValue(80);
-    syncTitle();
+    sync(80);
   </script>
 </body>
 </html>
+
