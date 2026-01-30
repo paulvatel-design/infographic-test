@@ -11,36 +11,55 @@
 
   <style>
     * { box-sizing: border-box; }
+
+    :root{
+      --accent: #3871E1;
+      --accentAlpha0: rgba(56,113,225,0);
+    }
+
     body{
       margin:0;
       min-height:100vh;
-      display:grid;
-      place-items:center;
       background:#1b1b1b;
       color:#fff;
       font-family: system-ui, sans-serif;
       padding: 28px 16px;
+    }
+
+    /* ==============
+       LAYOUT WRAPPER
+       ============== */
+    .layout{
+      display:flex;
       gap: 18px;
+      align-items:flex-start;
+      justify-content:center;
+      width: 100%;
     }
 
-    /* Variables de couleur (pilotées par la palette) */
-    :root{
-      --accent: #3871E1;         /* couleur du bord */
-      --accentAlpha0: rgba(56,113,225,0); /* centre transparent */
+    /* Mobile fallback */
+    @media (max-width: 1100px){
+      .layout{
+        flex-direction: column;
+        align-items:center;
+      }
     }
 
+    /* EXPORTABLE CARD */
     .card{
       position: relative;
       width: 721px;
       height: 721px;
       background: #0F0F0F;
       overflow: hidden;
+      flex: 0 0 auto;
     }
 
     .title{
       position:absolute;
       top: 48px;
       left: 48px;
+
       color: #FFF;
       font-family: "Funnel Display", system-ui, sans-serif;
       font-size: 80px;
@@ -48,6 +67,7 @@
       line-height: 81.5px;
       margin: 0;
       white-space: pre-line;
+
       z-index: 2;
     }
 
@@ -55,11 +75,13 @@
       position:absolute;
       left: 48px;
       bottom: 48px;
+
       display:flex;
       width: 552px;
       height: 171px;
       flex-direction: column;
       justify-content: center;
+
       color:#FFF;
       font-family: "Roboto Mono", monospace;
       font-size: 240px;
@@ -67,7 +89,8 @@
       line-height: 121.5px;
       letter-spacing: -6px;
       margin: 0;
-      z-index: 1; /* sous la jauge */
+
+      z-index: 1;
     }
 
     .gauge{
@@ -75,52 +98,58 @@
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
+
       width: 522px;
       height: 522px;
+
       pointer-events:none;
       z-index: 3;
       filter: drop-shadow(0 18px 28px rgba(0,0,0,.55));
     }
 
-    #sector{
-      transition: d 220ms ease, opacity 160ms ease;
-    }
-    #fullCircle{
-      transition: opacity 160ms ease;
-    }
+    #sector{ transition: d 220ms ease, opacity 160ms ease; }
+    #fullCircle{ transition: opacity 160ms ease; }
 
-    /* Controls */
-    .ui{
-      width: min(721px, 100%);
-      display:flex;
-      justify-content:flex-end;
-    }
+    /* ==================
+       CONTROLS SIDE PANEL
+       ================== */
     .panel{
-      display:flex;
-      flex-direction:column;
-      gap: 12px;
       background: rgba(10,12,16,.55);
       border: 1px solid rgba(255,255,255,.10);
       border-radius: 16px;
-      padding: 14px;
+      padding: 16px;
       backdrop-filter: blur(8px);
-      width: min(721px, 100%);
+
+      width: 380px;
+      max-width: 92vw;
     }
+
+    .panelTitle{
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: .2px;
+      margin: 2px 0 14px;
+      color: rgba(255,255,255,.9);
+    }
+
     .row{
       display:flex;
       gap:10px;
       align-items:center;
       justify-content:flex-end;
       flex-wrap: wrap;
+      margin-bottom: 12px;
     }
+
     .label{
       font-size: 12px;
       color: rgba(255,255,255,.65);
       letter-spacing:.3px;
-      width: 52px;
+      width: 58px;
       text-align:right;
     }
-    input[type="range"]{ width: 240px; }
+
+    input[type="range"]{ width: 220px; }
     input[type="number"], input[type="text"]{
       background:#111;
       border:1px solid rgba(255,255,255,.2);
@@ -131,7 +160,13 @@
       font-size:14px;
     }
     input[type="number"]{ width: 86px; text-align:right; }
-    input[type="text"]{ width: 360px; }
+    input[type="text"]{ width: 100%; }
+
+    .row.full{
+      justify-content: stretch;
+      align-items:flex-start;
+    }
+    .row.full .label{ margin-top: 10px; }
 
     button{
       background:#111;
@@ -144,20 +179,19 @@
     }
     button[disabled]{ opacity:.55; cursor:not-allowed; }
 
-    /* Palette de couleurs */
     .swatches{
       display:flex;
       gap: 10px;
       align-items:center;
       justify-content:flex-end;
+      flex-wrap: wrap;
     }
     .swatch{
       width: 22px;
       height: 22px;
-      border-radius: 6px;     /* carrés arrondis comme UI moderne */
+      border-radius: 6px;
       border: 1px solid rgba(255,255,255,.22);
       cursor: pointer;
-      position: relative;
       outline: none;
     }
     .swatch[aria-selected="true"]{
@@ -182,39 +216,42 @@
 
 <body>
 
-  <div class="card" id="exportArea">
-    <h1 class="title" id="titleText">Security<br>rating</h1>
-    <p class="value"><span id="pctText">80%</span></p>
+  <div class="layout">
+    <!-- LEFT: EXPORTABLE VISUAL -->
+    <div class="card" id="exportArea">
+      <h1 class="title" id="titleText">Security<br>rating</h1>
+      <p class="value"><span id="pctText">80%</span></p>
 
-    <svg class="gauge" viewBox="0 0 300 300" aria-label="Gauge">
-      <defs>
-        <!-- Le gradient est piloté par --accent -->
-        <radialGradient id="fillRadial" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="var(--accentAlpha0)" />
-          <stop offset="100%" stop-color="var(--accent)" />
-        </radialGradient>
+      <svg class="gauge" viewBox="0 0 300 300" aria-label="Gauge">
+        <defs>
+          <radialGradient id="fillRadial" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="var(--accentAlpha0)" />
+            <stop offset="100%" stop-color="var(--accent)" />
+          </radialGradient>
 
-        <filter id="soften" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="0.15" />
-        </filter>
-      </defs>
+          <filter id="soften" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="0.15" />
+          </filter>
+        </defs>
 
-      <circle id="fullCircle" cx="150" cy="150" r="140"
-              fill="url(#fillRadial)" filter="url(#soften)" opacity="0"></circle>
+        <circle id="fullCircle" cx="150" cy="150" r="140"
+                fill="url(#fillRadial)" filter="url(#soften)" opacity="0"></circle>
 
-      <path id="sector" d="" fill="url(#fillRadial)" filter="url(#soften)"></path>
-    </svg>
-  </div>
+        <path id="sector" d="" fill="url(#fillRadial)" filter="url(#soften)"></path>
+      </svg>
+    </div>
 
-  <div class="ui">
+    <!-- RIGHT: CONTROLS -->
     <div class="panel">
+      <div class="panelTitle">Controls</div>
+
       <div class="row">
         <div class="label">%</div>
         <input id="range" type="range" min="0" max="100" value="80">
         <input id="num" type="number" min="0" max="100" value="80">
       </div>
 
-      <div class="row">
+      <div class="row full">
         <div class="label">Titre</div>
         <input id="titleInput" type="text" value="Security\nrating">
       </div>
@@ -251,7 +288,6 @@
     const statusEl = document.getElementById('status');
     const swatchesEl = document.getElementById('swatches');
 
-    // Palette (tu peux ajouter autant de couleurs que tu veux ici)
     const palette = [
       { name: "Blue",  hex: "#3871E1" },
       { name: "Cyan",  hex: "#2EC7FF" },
@@ -260,13 +296,11 @@
       { name: "Pink",  hex: "#FF4D9D" },
       { name: "Violet",hex: "#8A5CFF" }
     ];
-
     let currentColor = palette[0].hex;
 
     const cx = 150, cy = 150;
     const radius = 140;
-
-    const startAngle = -90;
+    const startAngle = -90;  // 12h
     const fullSweep = 360;
 
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
@@ -299,7 +333,6 @@
         sector.setAttribute('opacity', '0');
         return;
       }
-
       if (v >= 100){
         fullCircle.setAttribute('opacity', '1');
         sector.setAttribute('opacity', '0');
@@ -308,7 +341,6 @@
 
       fullCircle.setAttribute('opacity', '0');
       sector.setAttribute('opacity', '1');
-
       const end = startAngle + (fullSweep * (v / 100));
       sector.setAttribute('d', describeSector(cx, cy, radius, startAngle, end));
     }
@@ -358,13 +390,11 @@
       currentColor = hex;
       document.documentElement.style.setProperty('--accent', hex);
 
-      // centre transparent: on calcule rgba(alpha=0) depuis hex
       const r = parseInt(hex.slice(1,3), 16);
       const g = parseInt(hex.slice(3,5), 16);
       const b = parseInt(hex.slice(5,7), 16);
       document.documentElement.style.setProperty('--accentAlpha0', `rgba(${r}, ${g}, ${b}, 0)`);
 
-      // UI selection
       [...swatchesEl.querySelectorAll('.swatch')].forEach(btn => {
         btn.setAttribute('aria-selected', btn.dataset.hex === hex ? 'true' : 'false');
       });
@@ -386,7 +416,6 @@
       setColor(palette[0].hex);
     }
 
-    // Events
     range.addEventListener('input', e => syncValue(e.target.value));
     num.addEventListener('input', e => syncValue(e.target.value));
     titleInput.addEventListener('input', syncTitle);
@@ -394,13 +423,13 @@
     btnPng.addEventListener('click', () => exportImage("png"));
     btnJpg.addEventListener('click', () => exportImage("jpeg"));
 
-    // Init
     renderSwatches();
     syncValue(80);
     syncTitle();
   </script>
 </body>
 </html>
+
 
 
 
